@@ -1,0 +1,34 @@
+#
+# LIRC driver(s) configuration
+#
+menuconfig LIRC_STAGING
+	bool "Linux Infrared Remote Control IR receiver/transmitter drivers"
+	depends on LIRC
+	help
+	  Say Y here, and all supported Linux Infrared Remote Control IR and
+	  RF receiver and transmitter drivers will be displayed. When paired
+	  with a remote control and the lirc daemon, the receiver drivers
+	  allow control of your Linux system via remote control.
+
+if LIRC_STAGING
+
+config LIRC_ZILOG
+	tristate "Zilog/Hauppauge IR Transmitter"
+	depends on LIRC && I2C
+	help
+	  Driver for the Zilog/Hauppauge IR Transmitter, found on
+	  PVR-150/500, HVR-1200/1250/1700/1800, HD-PVR and other cards
+
+config LIRC_ODROID
+	tristate "GPIO based IR Transmitter for ODROID"
+	depends on LIRC
+	help
+	  Say Y if you want to use GPIO-based IR transmitter
+	  connected on one of expansion connectors
+	  of ODROID-XU3/4 and C1/C2.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called lirc_odroid.
+
+	  If unsure, say N.
+endif

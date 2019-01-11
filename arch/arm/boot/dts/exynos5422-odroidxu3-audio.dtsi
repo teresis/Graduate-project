@@ -1,0 +1,69 @@
+/*
+ * Hardkernel Odroid XU3 audio subsystem device tree source
+ *
+ * Copyright (c) 2015 Krzysztof Kozlowski
+ * Copyright (c) 2014 Collabora Ltd.
+ * Copyright (c) 2013 Samsung Electronics Co., Ltd.
+ *		http://www.samsung.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+*/
+
+#include <dt-bindings/sound/samsung-i2s.h>
+
+/ {
+	sound: sound {
+		compatible = "samsung,odroid-xu3-audio";
+		model = "Odroid-XU3";
+
+		samsung,audio-widgets =
+			"Headphone", "Headphone Jack",
+			"Speakers", "Speakers";
+		samsung,audio-routing =
+			"Headphone Jack", "HPL",
+			"Headphone Jack", "HPR",
+			"Headphone Jack", "MICBIAS",
+			"IN1", "Headphone Jack",
+			"Speakers", "SPKL",
+			"Speakers", "SPKR";
+
+		clocks = <&clock CLK_FOUT_EPLL>,
+			<&clock CLK_MOUT_EPLL>,
+			<&clock CLK_MOUT_MAU_EPLL>,
+			<&clock CLK_MOUT_USER_MAU_EPLL>,
+			<&clock_audss EXYNOS_MOUT_AUDSS>,
+			<&clock_audss EXYNOS_MOUT_I2S>,
+			<&clock_audss EXYNOS_DOUT_SRP>,
+			<&clock_audss EXYNOS_DOUT_AUD_BUS>,
+			<&clock CLK_MAU_EPLL>;
+		clock-names = "fout_epll", "mout_sclk_epll",
+			"mout_mau_epll","mout_mau_epll_user",
+			"mout_audss", "mout_i2s",
+			"dout_srp","dout_aud_bus",
+			"mau_epll_clk";
+
+		cpu {
+			sound-dai = <&i2s0 0>;
+		};
+		codec {
+			sound-dai = <&max98090>, <&hdmi>;
+		};
+	};
+};
+
+&hsi2c_5 {
+	status = "okay";
+	max98090: max98090@10 {
+		compatible = "maxim,max98090";
+		reg = <0x10>;
+		interrupt-parent = <&gpx3>;
+		interrupts = <2 IRQ_TYPE_NONE>;
+		#sound-dai-cells = <0>;
+	};
+};
+
+&i2s0 {
+	status = "okay";
+};

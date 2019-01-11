@@ -1,0 +1,94 @@
+/*
+ * Hardkernel Odroid XU3 board device tree source
+ *
+ * Copyright (c) 2014 Collabora Ltd.
+ * Copyright (c) 2013 Samsung Electronics Co., Ltd.
+ *		http://www.samsung.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+*/
+
+/dts-v1/;
+#include "exynos5422-odroidxu3-common.dtsi"
+#include "exynos5422-odroidxu3-audio.dtsi"
+#include "exynos54xx-odroidxu-leds.dtsi"
+
+/ {
+	model = "Hardkernel Odroid XU3";
+	compatible = "hardkernel,odroid-xu3", "samsung,exynos5800", "samsung,exynos5";
+};
+
+/*
+	i2c0 INA231 Sensors
+
+	- drivers/hardkernel/ina231.h
+
+	 config         = INA231_CONFIG(VSH_CT(eVSH_CT_8244uS)     | \
+	                                VBUS_CT(eVBUS_CT_8244uS)   | \
+	                                AVG_BIT(eAVG_16)           | \
+	                                eSHUNT_BUS_VOLT_CONTINUOUS),
+	update_period  = CONVERSION_DELAY(eVSH_CON_8244uS, eVBUS_CON_8244uS, eAVG_CON_16),
+*/
+
+&i2c_0 {
+	status = "okay";
+	clock-frequency = <400000>;
+	ina231@40  {
+		compatible = "hardkernel,INA231";
+		reg = <0x40>;
+		sensor-name = "sensor_arm";
+		enable = <0>;
+		max_A = <9>;
+		shunt_R_mohm = <10>;
+		config = <0x45FF>;
+		update_period = <263808>;
+	};
+	ina231@41  {
+		compatible = "hardkernel,INA231";
+		reg = <0x41>;
+		sensor-name = "sensor_mem";
+		enable = <0>;
+		max_A = <3>;
+		shunt_R_mohm = <10>;
+		config = <0x45FF>;
+		update_period = <263808>;
+	};
+	ina231@44  {
+		compatible = "hardkernel,INA231";
+		reg = <0x44>;
+		sensor-name = "sensor_g3d";
+		enable = <0>;
+		max_A = <5>;
+		shunt_R_mohm = <10>;
+		config = <0x45FF>;
+		update_period = <263808>;
+	};
+	ina231@45  {
+		compatible = "hardkernel,INA231";
+		reg = <0x45>;
+		sensor-name = "sensor_kfc";
+		enable = <0>;
+		max_A = <2>;
+		shunt_R_mohm = <10>;
+		config = <0x45FF>;
+		update_period = <263808>;
+	};
+};
+
+&pwm {
+	/*
+	 * PWM 0 -- fan
+	 * PWM 1 -- Green LED
+	 * PWM 2 -- Blue LED
+	 * PWM 3 -- on MIPI connector for backlight
+	 */
+	pinctrl-0 = <&pwm0_out &pwm1_out &pwm2_out &pwm3_out>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&usbdrd_dwc3_1 {
+	dr_mode = "otg";
+};

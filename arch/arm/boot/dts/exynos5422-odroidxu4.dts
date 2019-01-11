@@ -1,0 +1,177 @@
+/*
+ * Hardkernel Odroid XU4 board device tree source
+ *
+ * Copyright (c) 2015 Krzysztof Kozlowski
+ * Copyright (c) 2014 Collabora Ltd.
+ * Copyright (c) 2013-2015 Samsung Electronics Co., Ltd.
+ *		http://www.samsung.com
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+*/
+
+/dts-v1/;
+#include <dt-bindings/sound/samsung-i2s.h>
+#include "exynos5422-odroidxu3-common.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Hardkernel Odroid XU4";
+	compatible = "hardkernel,odroid-xu4", "samsung,exynos5800", \
+		     "samsung,exynos5";
+
+	pwmleds {
+		compatible = "pwm-leds";
+
+		blueled {
+			label = "blue:heartbeat";
+			pwms = <&pwm 2 2000000 0>;
+			pwm-names = "pwm2";
+			max_brightness = <255>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	dummy_codec: spdif-transmitter {
+		compatible = "linux,spdif-dit";
+		#sound-dai-cells = <0>;
+		status = "okay";
+	};
+
+	sound: sound {
+		compatible = "samsung,odroid-xu3-audio";
+		model = "Odroid-XU4";
+
+		clocks = <&clock CLK_FOUT_EPLL>,
+			<&clock CLK_MOUT_EPLL>,
+			<&clock CLK_MOUT_MAU_EPLL>,
+			<&clock CLK_MOUT_USER_MAU_EPLL>,
+			<&clock_audss EXYNOS_MOUT_AUDSS>,
+			<&clock_audss EXYNOS_MOUT_I2S>,
+			<&clock_audss EXYNOS_DOUT_SRP>,
+			<&clock_audss EXYNOS_DOUT_AUD_BUS>,
+			<&clock CLK_MAU_EPLL>;
+		clock-names = "fout_epll", "mout_sclk_epll",
+			"mout_mau_epll","mout_mau_epll_user",
+			"mout_audss", "mout_i2s",
+			"dout_srp","dout_aud_bus",
+			"mau_epll_clk";
+
+		cpu {
+			sound-dai = <&i2s0 0>;
+		};
+
+		codec {
+			sound-dai = <&dummy_codec>, <&hdmi>;
+		};
+	};
+};
+
+&i2s0 {
+	status = "okay";
+};
+
+&pwm {
+	/*
+	 * PWM 0 -- fan
+	 * PWM 2 -- Blue LED
+	 */
+	pinctrl-0 = <&pwm0_out &pwm2_out>;
+	pinctrl-names = "default";
+	samsung,pwm-outputs = <0>, <2>;
+	status = "okay";
+};
+
+&usbdrd_dwc3_1 {
+	dr_mode = "host";
+};
+
+/* i2c@12C70000 */
+&i2c_1 {
+	status = "okay";
+	samsung,i2c-max-bus-freq = <400000>;
+};
+
+/* i2c@12cb0000 */
+&hsi2c_5 {
+	status = "okay";
+	samsung,hs-mode;
+	clock-frequency = <400000>;
+
+	/* Hardkernel I2C 3.5" Touchscreen */
+	/* drivers/input/sx865x.c */
+	sx865x: sx865x@49	{
+		status = "disabled";
+		compatible = "semtech,sx8650";
+		reg = <0x49>;
+		#clock-cells = <0>;
+
+		/* H/W Pin control setup */
+		gpio-pendown = <&gpx3 1 GPIO_ACTIVE_HIGH>;
+		gpio-reset   = <&gpx2 5 GPIO_ACTIVE_LOW>;
+
+		/* platform data setup */
+		invert-x = <0>;
+		invert-y = <1>;
+		swap-xy = <1>;
+	};
+};
+
+&adc {
+	status = "okay";
+	vdd-supply = <&ldo4_reg>;
+};
+
+&spi_1 {
+	status = "okay";
+
+	assigned-clocks = <&clock CLK_MOUT_SPI1>, <&clock CLK_DOUT_SPI1>;
+	assigned-clock-parents = <&clock CLK_MOUT_DPLL>;
+	assigned-clock-rates = <0>, <80000000>;
+
+	samsung,spi-src-clk = <0>;
+	num-cs = <2>;
+	cs-gpios = <&gpa2 5 GPIO_ACTIVE_HIGH>, <&gpx2 1 GPIO_ACTIVE_HIGH>;
+
+	spidev: spidev@0 {
+		reg = <0>;
+		compatible = "spidev";
+		spi-max-frequency = <1000000>;
+
+		controller-data {
+			cs-gpio = <&gpa2 5 GPIO_ACTIVE_HIGH>;
+			samsung,spi-feedback-delay = <0>;
+		};
+	};
+
+	ads7846: ads7846@1 {
+		reg = <1>;
+		compatible = "ti,ads7846";
+		interrupt-parent = <&gpa0>;
+		interrupts = <3 0>;
+		spi-max-frequency = <1000000>;
+
+		/* GPA0.3 Pull-up enable */
+		pinctrl-0 = <&ts_pendown_gpio>;
+		pinctrl-names = "default";
+
+		pendown-gpio = <&gpa0 3 GPIO_ACTIVE_HIGH>;
+		vcc-supply = <&ldo30_reg>;
+
+		ti,swap-xy = <1>;
+		ti,x-min = /bits/ 16 <0>;
+		ti,x-max = /bits/ 16 <8000>;
+		ti,y-min = /bits/ 16 <0>;
+		ti,y-max = /bits/ 16 <4800>;
+		ti,x-plate-ohms = /bits/ 16 <40>;
+		ti,pressure-max = /bits/ 16 <255>;
+
+		linux,wakeup;
+
+		controller-data {
+			cs-gpio = <&gpx2 1 GPIO_ACTIVE_HIGH>;
+			samsung,spi-feedback-delay = <0>;
+		};
+	};
+};
